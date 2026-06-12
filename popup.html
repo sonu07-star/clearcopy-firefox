@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ClearCopy</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand-mark" aria-hidden="true">C</div>
+        <div>
+          <p class="brand">ClearCopy</p>
+          <p class="tagline">Share links, not trackers.</p>
+        </div>
+      </header>
+
+      <section id="result-card" class="result-card loading" aria-live="polite">
+        <div class="result-heading">
+          <span id="result-icon" class="result-icon" aria-hidden="true">...</span>
+          <div>
+            <h1 id="result-title">Checking this link</h1>
+            <p id="result-summary">Looking for tracking parameters...</p>
+          </div>
+        </div>
+
+        <div id="removed-list" class="removed-list" hidden></div>
+
+        <div class="url-preview">
+          <span>Clean link</span>
+          <p id="clean-url">Loading...</p>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="copy-button" class="primary" type="button" disabled>
+          <span>Copy clean link</span>
+          <kbd>Alt Shift C</kbd>
+        </button>
+        <button id="replace-button" class="secondary" type="button" disabled>
+          Replace address with clean link
+        </button>
+      </div>
+
+      <footer>
+        <span id="stats">Everything stays on your device.</span>
+        <span class="privacy-dot" aria-hidden="true"></span>
+        <strong>Private</strong>
+      </footer>
+    </main>
+
+    <script src="cleaner.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
