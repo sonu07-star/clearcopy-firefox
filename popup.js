@@ -16,9 +16,9 @@ let result;
 function showResult() {
   elements.card.classList.remove("loading");
   elements.card.classList.toggle("dirty", result.changed);
-  elements.icon.textContent = result.changed ? result.removed.length : "✓";
+  elements.icon.textContent = result.changed ? result.removed.length : "OK";
   elements.title.textContent = result.changed
-    ? `${result.removed.length} tracker${result.removed.length === 1 ? "" : "s"} found`
+    ? `${result.removed.length} tracking field${result.removed.length === 1 ? "" : "s"} found`
     : "This link is already clean";
   elements.summary.textContent = result.changed
     ? "Ready to copy without the tracking clutter."
@@ -39,7 +39,7 @@ function showResult() {
   }
 
   elements.copy.disabled = false;
-  elements.replace.disabled = !result.changed;
+  elements.replace.disabled = !result.changed || !Number.isInteger(currentTab?.id);
 }
 
 async function updateStats() {
@@ -54,13 +54,17 @@ async function updateStats() {
 }
 
 async function copyCleanLink() {
-  await navigator.clipboard.writeText(result.cleanUrl);
-  await browser.runtime.sendMessage({
-    type: "record-clean",
-    removedCount: result.removed.length
-  });
-  elements.copy.querySelector("span").textContent = "Copied!";
-  window.setTimeout(() => window.close(), 650);
+  try {
+    await navigator.clipboard.writeText(result.cleanUrl);
+    await browser.runtime.sendMessage({
+      type: "record-clean",
+      removedCount: result.removed.length
+    });
+    elements.copy.querySelector("span").textContent = "Copied!";
+    window.setTimeout(() => window.close(), 650);
+  } catch {
+    elements.copy.querySelector("span").textContent = "Copy failed - try again";
+  }
 }
 
 async function initialize() {
@@ -68,7 +72,7 @@ async function initialize() {
   [currentTab] = tabs;
 
   if (!currentTab?.url || !isCleanableUrl(currentTab.url)) {
-    elements.icon.textContent = "–";
+    elements.icon.textContent = "-";
     elements.title.textContent = "This page cannot be cleaned";
     elements.summary.textContent = "Open a regular web page and try again.";
     elements.cleanUrl.textContent = currentTab?.url || "URL unavailable";
@@ -83,8 +87,12 @@ async function initialize() {
 elements.copy.addEventListener("click", copyCleanLink);
 
 elements.replace.addEventListener("click", async () => {
-  await browser.tabs.update(currentTab.id, { url: result.cleanUrl });
-  window.close();
+  try {
+    await browser.tabs.update(currentTab.id, { url: result.cleanUrl });
+    window.close();
+  } catch {
+    elements.replace.textContent = "Could not replace this address";
+  }
 });
 
 Promise.all([initialize(), updateStats()]).catch(() => {

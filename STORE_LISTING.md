@@ -25,6 +25,8 @@ Features:
 - Right-click any link and choose "Copy clean link"
 - Use Alt+Shift+C to clean and copy the current page instantly
 - See exactly which tracking parameters were removed
+- Automatically recognize common new click and affiliate tracking identifiers
+- Preserve useful search, product, filter, pagination, and timestamp parameters
 - Replace a messy address with its clean version
 - Private local-only usage totals
 - No accounts, analytics, ads, or data collection
@@ -41,6 +43,11 @@ websites or browsing history.
 
 clean url, remove tracking, clean link, utm remover, fbclid, privacy, copy link,
 share link, url cleaner
+
+## Listing Links
+
+- Homepage and source: https://github.com/sonu07-star/clearcopy-firefox
+- Privacy policy: https://github.com/sonu07-star/clearcopy-firefox/blob/codex/clearcopy-firefox/PRIVACY.md
 
 ## Screenshot Plan
 

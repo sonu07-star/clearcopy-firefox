@@ -1,7 +1,9 @@
 # ClearCopy - Clean Links
 
 ClearCopy removes common marketing and social tracking parameters from links
-before you share them. All processing happens locally in Firefox.
+before you share them. It combines maintained rules for popular sites with
+conservative automatic detection for recognizable tracking identifiers. All
+processing happens locally in Firefox.
 
 ## Why people would install it
 
@@ -10,6 +12,8 @@ before you share them. All processing happens locally in Firefox.
 - Press `Alt+Shift+C` to clean and copy the current page URL.
 - No account, ads, analytics, remote code, or data collection.
 - Minimal permissions and no access to browsing history.
+- Preserves search terms, product selections, timestamps, filters, and other
+  useful link behavior.
 
 ## Test in Firefox
 
@@ -20,16 +24,20 @@ before you share them. All processing happens locally in Firefox.
 5. Open a URL containing a tracker, such as
    `https://example.com/article?utm_source=newsletter&fbclid=test`.
 
-## Before publishing
+## Development checks
 
-1. Replace `clearcopy@example.com` in `manifest.json` with a permanent extension ID.
-2. Add polished PNG icons at 48, 96, and 128 pixels if AMO requests raster assets.
-3. Test the popup, context menus, shortcut, dark mode, and restricted Firefox pages.
-4. Package the extension and submit it through
-   [addons.mozilla.org](https://addons.mozilla.org/developers/).
+```powershell
+npm install
+npm run check
+npm run build
+```
+
+The upload-ready ZIP is created in `web-ext-artifacts`.
 
 ## Privacy
 
 ClearCopy does not collect or transmit data. Local usage totals are stored only
 on the user's device and can be removed by uninstalling the extension or
 clearing its local extension storage.
+
+Read the full [privacy policy](PRIVACY.md).

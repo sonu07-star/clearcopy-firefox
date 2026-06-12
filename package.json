@@ -1,0 +1,15 @@
+{
+  "name": "clearcopy-firefox",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Development and release checks for ClearCopy.",
+  "scripts": {
+    "test": "node tests/cleaner.test.js && node tests/background.test.js",
+    "lint": "web-ext lint",
+    "build": "web-ext build --overwrite-dest --ignore-files package.json package-lock.json tests README.md PRIVACY.md STORE_LISTING.md RELEASE_CHECKLIST.md",
+    "check": "npm test && npm run lint"
+  },
+  "devDependencies": {
+    "web-ext": "10.4.0"
+  }
+}
