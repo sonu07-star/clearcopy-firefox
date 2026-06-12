@@ -1,0 +1,38 @@
+name: Broken or incorrectly cleaned link
+description: Report a link that ClearCopy breaks or cleans incorrectly.
+title: "[Broken link] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Remove private tokens and personal information before posting URLs.
+  - type: textarea
+    id: original
+    attributes:
+      label: Original URL
+      description: The URL before ClearCopy cleaned it.
+      placeholder: https://example.com/...
+    validations:
+      required: true
+  - type: textarea
+    id: cleaned
+    attributes:
+      label: Cleaned URL
+      description: The URL produced by ClearCopy.
+      placeholder: https://example.com/...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: Explain what should have been preserved or removed.
+    validations:
+      required: true
+  - type: input
+    id: firefox
+    attributes:
+      label: Firefox version
+    validations:
+      required: true

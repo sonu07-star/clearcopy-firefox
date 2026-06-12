@@ -1,0 +1,31 @@
+name: Tracking rule request
+description: Suggest a tracking parameter or redirect wrapper to clean.
+title: "[Rule request] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: Remove private tokens and personal information before posting URLs.
+  - type: textarea
+    id: example
+    attributes:
+      label: Example URL
+      description: Provide a public example that demonstrates the tracking data.
+      placeholder: https://example.com/page?tracking_parameter=value
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Why is this tracking?
+      description: Explain how the parameter or wrapper is used for tracking.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected cleaned URL
+      placeholder: https://example.com/page
+    validations:
+      required: true
