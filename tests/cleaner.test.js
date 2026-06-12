@@ -37,6 +37,18 @@ const cases = [
       "https://example.com/app?session_id=abc&customer_id=42&campaign_name=spring&ref_=section"
   },
   {
+    name: "preserves descriptive marketing fields that are not identifiers",
+    input:
+      "https://example.com/report?campaign_name=spring&affiliate_status=active&tracking_enabled=true",
+    expected:
+      "https://example.com/report?campaign_name=spring&affiliate_status=active&tracking_enabled=true"
+  },
+  {
+    name: "preserves site-specific-looking parameters outside their site",
+    input: "https://example.com/item?pd_rd_r=required&pf_rd_p=layout&si=session",
+    expected: "https://example.com/item?pd_rd_r=required&pf_rd_p=layout&si=session"
+  },
+  {
     name: "preserves fragments and non-tracking parameters",
     input: "https://example.com/search?q=shoes&page=2#reviews",
     expected: "https://example.com/search?q=shoes&page=2#reviews"
@@ -64,6 +76,18 @@ const cases = [
     input:
       "https://slack-redir.net/link?url=https%3A%2F%2Fexample.com%2Fpost%3Fclick_id%3Dabc%26id%3D7",
     expected: "https://example.com/post?id=7"
+  },
+  {
+    name: "does not unwrap lookalike redirect domains",
+    input:
+      "https://google.com.example.org/url?q=https%3A%2F%2Fexample.com%2Fprivate",
+    expected:
+      "https://google.com.example.org/url?q=https%3A%2F%2Fexample.com%2Fprivate"
+  },
+  {
+    name: "does not unwrap invalid or non-web redirect targets",
+    input: "https://www.google.com/url?q=javascript%3Aalert%281%29&source=web",
+    expected: "https://www.google.com/url?q=javascript%3Aalert%281%29&source=web"
   },
   {
     name: "cleans an Amazon landing page",
@@ -95,6 +119,11 @@ const cases = [
     expected: "https://example.com/product?tag=important&ref=section"
   },
   {
+    name: "does not apply Amazon rules to lookalike domains",
+    input: "https://amazon.com.example.org/product?tag=required&ref=section",
+    expected: "https://amazon.com.example.org/product?tag=required&ref=section"
+  },
+  {
     name: "cleans YouTube share links while preserving video and timestamp",
     input: "https://www.youtube.com/watch?v=abc123&t=90s&si=share-token&feature=shared",
     expected: "https://www.youtube.com/watch?v=abc123&t=90s"
@@ -118,6 +147,19 @@ const cases = [
     name: "does not remove short share parameter names globally",
     input: "https://example.com/watch?si=important&feature=enabled",
     expected: "https://example.com/watch?si=important&feature=enabled"
+  },
+  {
+    name: "preserves authentication and application state",
+    input:
+      "https://example.com/callback?code=abc&state=xyz&token=session&client_id=app",
+    expected:
+      "https://example.com/callback?code=abc&state=xyz&token=session&client_id=app"
+  },
+  {
+    name: "removes new unambiguous tracker name variants",
+    input:
+      "https://example.com/page?partner-token=abc&promo_code=def&referral_id=ghi&article=1",
+    expected: "https://example.com/page?article=1"
   },
   {
     name: "preserves duplicate useful parameters",

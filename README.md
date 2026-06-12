@@ -23,6 +23,17 @@ processing happens locally in Firefox.
 
 ClearCopy does not request access to all websites or browsing history.
 
+## Rule design
+
+ClearCopy uses readable, local rule sets:
+
+- Global rules for established tracking parameters such as `utm_*` and `fbclid`.
+- Site-specific rules for parameters that are tracking only on particular sites.
+- A small conservative classifier for unambiguous names such as `click_id`.
+- Redirect rules for known wrappers such as Outlook Safe Links.
+
+Unknown or ambiguous parameters are preserved to avoid breaking links.
+
 ## Test locally
 
 1. Open `about:debugging`.

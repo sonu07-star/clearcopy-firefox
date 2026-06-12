@@ -9,11 +9,8 @@
   <body>
     <main>
       <header>
-        <div class="brand-mark" aria-hidden="true">C</div>
-        <div>
-          <p class="brand">ClearCopy</p>
-          <p class="tagline">Share links, not trackers.</p>
-        </div>
+        <img src="icons/icon.svg" width="24" height="24" alt="">
+        <strong>ClearCopy</strong>
       </header>
 
       <section id="result-card" class="result-card loading" aria-live="polite">
@@ -21,33 +18,26 @@
           <span id="result-icon" class="result-icon" aria-hidden="true">...</span>
           <div>
             <h1 id="result-title">Checking this link</h1>
-            <p id="result-summary">Looking for tracking parameters...</p>
+            <p id="result-summary">Looking for tracking parameters.</p>
           </div>
         </div>
 
         <div id="removed-list" class="removed-list" hidden></div>
 
-        <div class="url-preview">
-          <span>Clean link</span>
-          <p id="clean-url">Loading...</p>
-        </div>
+        <label for="clean-url">Clean link</label>
+        <input id="clean-url" type="text" readonly value="Loading...">
       </section>
 
       <div class="actions">
         <button id="copy-button" class="primary" type="button" disabled>
-          <span>Copy clean link</span>
-          <kbd>Alt Shift C</kbd>
+          Copy clean link
         </button>
-        <button id="replace-button" class="secondary" type="button" disabled>
-          Replace address with clean link
+        <button id="replace-button" type="button" disabled>
+          Replace current address
         </button>
       </div>
 
-      <footer>
-        <span>Everything stays on your device.</span>
-        <span class="privacy-dot" aria-hidden="true"></span>
-        <strong>Private</strong>
-      </footer>
+      <footer>Runs locally. No browsing data collected.</footer>
     </main>
 
     <script src="cleaner.js"></script>

@@ -1,69 +1,46 @@
-const TRACKING_PARAMETERS = new Set([
-  "_hsenc",
-  "_hsmi",
-  "_ga",
-  "_openstat",
-  "campaign_id",
-  "dclid",
-  "epik",
-  "fbclid",
-  "gclid",
-  "gclsrc",
-  "gbraid",
-  "igshid",
-  "irclickid",
-  "irgwc",
-  "li_fat_id",
-  "mc_cid",
-  "mc_eid",
-  "mkt_tok",
-  "msclkid",
-  "oly_anon_id",
-  "oly_enc_id",
-  "rb_clickid",
-  "s_cid",
-  "srsltid",
-  "ttclid",
-  "twclid",
-  "vero_conv",
-  "vero_id",
-  "wbraid",
-  "wickedid",
-  "yclid"
-]);
-
-const TRACKING_PREFIXES = [
-  "_ga_",
-  "_gac_",
-  "utm_",
-  "pk_",
-  "mtm_",
-  "hsa_",
-  "vero_"
-];
-
-const AUTOMATIC_TRACKING_NAME_PATTERNS = [
-  /(^|[_-])(ad|affiliate|click|marketing|partner|promo|referral|tracking|tracker)[_-]?(id|code|token)$/i,
-  /(^|[_-])(adid|affid|clickid|trackingid|trackerid)$/i,
-  /(^|[_-])[a-z]*clid$/i,
-  /^(pd|pf)_rd_/i
-];
-
-const AMAZON_TRACKING_PARAMETERS = new Set([
-  "content-id",
-  "ds",
-  "mfadid",
-  "pd_rd_r",
-  "pd_rd_w",
-  "pd_rd_wg",
-  "pf_rd_p",
-  "pf_rd_r",
-  "qid",
-  "ref",
-  "ref_",
-  "tag",
-  "xpid"
-]);
+// Rules are intentionally conservative. A parameter is removed only when it is
+// known tracking metadata or its name is an unambiguous tracking identifier.
+const GLOBAL_PARAMETER_RULES = {
+  exact: new Set([
+    "_ga",
+    "_hsenc",
+    "_hsmi",
+    "_openstat",
+    "campaign_id",
+    "dclid",
+    "epik",
+    "fbclid",
+    "gbraid",
+    "gclid",
+    "gclsrc",
+    "igshid",
+    "irclickid",
+    "irgwc",
+    "li_fat_id",
+    "mc_cid",
+    "mc_eid",
+    "mkt_tok",
+    "msclkid",
+    "oly_anon_id",
+    "oly_enc_id",
+    "rb_clickid",
+    "s_cid",
+    "srsltid",
+    "ttclid",
+    "twclid",
+    "vero_conv",
+    "vero_id",
+    "wbraid",
+    "wickedid",
+    "yclid"
+  ]),
+  prefixes: ["_ga_", "_gac_", "utm_", "pk_", "mtm_", "hsa_", "vero_"],
+  patterns: [
+    /(^|[_-])(ad|affiliate|click|marketing|partner|promo|referral|tracking|tracker)[_-]?(id|code|token)$/i,
+    /(^|[_-])(adid|affid|clickid|trackingid|trackerid)$/i,
+    /(^|[_-])[a-z]*clid$/i
+  ]
+};
 
 const AMAZON_DOMAINS = new Set([
   "amazon.ae",
@@ -90,7 +67,26 @@ const AMAZON_DOMAINS = new Set([
   "amazon.sg"
 ]);
 
-const HOST_TRACKING_PARAMETERS = [
+const SITE_PARAMETER_RULES = [
+  {
+    domains: AMAZON_DOMAINS,
+    parameters: new Set([
+      "content-id",
+      "ds",
+      "mfadid",
+      "pd_rd_r",
+      "pd_rd_w",
+      "pd_rd_wg",
+      "pf_rd_p",
+      "pf_rd_r",
+      "qid",
+      "ref",
+      "ref_",
+      "tag",
+      "xpid"
+    ]),
+    patterns: [/^(pd|pf)_rd_/i]
+  },
   {
     domains: new Set(["youtube.com", "youtu.be"]),
     parameters: new Set(["feature", "si"])
@@ -101,7 +97,7 @@ const HOST_TRACKING_PARAMETERS = [
   },
   {
     domains: new Set(["linkedin.com"]),
-    parameters: new Set(["lipi", "midSig", "midToken", "trk", "trkEmail"])
+    parameters: new Set(["lipi", "midsig", "midtoken", "trk", "trkemail"])
   },
   {
     domains: new Set(["ebay.com", "ebay.co.uk", "ebay.de", "ebay.ca", "ebay.com.au"]),
@@ -109,38 +105,49 @@ const HOST_TRACKING_PARAMETERS = [
   }
 ];
 
+const REDIRECT_RULES = [
+  { domains: new Set(["google.com"]), path: "/url", parameters: ["q", "url"] },
+  { domains: new Set(["facebook.com"]), path: "/l.php", parameters: ["u"] },
+  { domains: new Set(["l.instagram.com"]), parameters: ["u"] },
+  {
+    domainSuffix: "safelinks.protection.outlook.com",
+    parameters: ["url"]
+  },
+  { domains: new Set(["slack-redir.net"]), path: "/link", parameters: ["url"] }
+];
+
+function normalizeHostname(hostname) {
+  return hostname.replace(/^www\./, "").toLowerCase();
+}
+
 function hostMatchesDomain(hostname, domain) {
   return hostname === domain || hostname.endsWith(`.${domain}`);
 }
 
-function getHostTrackingParameters(hostname) {
-  const normalized = hostname.replace(/^www\./, "").toLowerCase();
+function hostMatchesDomains(hostname, domains) {
+  return [...domains].some((domain) => hostMatchesDomain(hostname, domain));
+}
 
-  for (const domain of AMAZON_DOMAINS) {
-    if (hostMatchesDomain(normalized, domain)) {
-      return AMAZON_TRACKING_PARAMETERS;
-    }
-  }
+function matchesParameterRules(name, rules) {
+  return (
+    rules.exact?.has(name) ||
+    rules.parameters?.has(name) ||
+    rules.prefixes?.some((prefix) => name.startsWith(prefix)) ||
+    rules.patterns?.some((pattern) => pattern.test(name))
+  );
+}
 
-  const parameters = new Set();
-  for (const rule of HOST_TRACKING_PARAMETERS) {
-    if ([...rule.domains].some((domain) => hostMatchesDomain(normalized, domain))) {
-      for (const name of rule.parameters) {
-        parameters.add(name.toLowerCase());
-      }
-    }
-  }
-
-  return parameters;
+function getSiteRules(hostname) {
+  return SITE_PARAMETER_RULES.filter((rule) => hostMatchesDomains(hostname, rule.domains));
 }
 
 function isTrackingParameter(name, hostname) {
-  const normalized = name.toLowerCase();
+  const normalizedName = name.toLowerCase();
+  const normalizedHost = normalizeHostname(hostname);
+
   return (
-    TRACKING_PARAMETERS.has(normalized) ||
-    TRACKING_PREFIXES.some((prefix) => normalized.startsWith(prefix)) ||
-    getHostTrackingParameters(hostname).has(normalized) ||
-    AUTOMATIC_TRACKING_NAME_PATTERNS.some((pattern) => pattern.test(normalized))
+    matchesParameterRules(normalizedName, GLOBAL_PARAMETER_RULES) ||
+    getSiteRules(normalizedHost).some((rule) => matchesParameterRules(normalizedName, rule))
   );
 }
 
@@ -152,27 +159,26 @@ function isCleanableUrl(value) {
   }
 }
 
+function matchesRedirectRule(url, rule) {
+  const hostname = normalizeHostname(url.hostname);
+  const domainMatch =
+    (rule.domains && hostMatchesDomains(hostname, rule.domains)) ||
+    (rule.domainSuffix && hostMatchesDomain(hostname, rule.domainSuffix));
+
+  return domainMatch && (!rule.path || url.pathname === rule.path);
+}
+
 function unwrapKnownRedirect(url) {
-  const hostname = url.hostname.replace(/^www\./, "").toLowerCase();
-  let target;
-
-  if (hostname === "google.com" && url.pathname === "/url") {
-    target = url.searchParams.get("q") || url.searchParams.get("url");
-  } else if (hostname.endsWith("facebook.com") && url.pathname === "/l.php") {
-    target = url.searchParams.get("u");
-  } else if (hostname === "l.instagram.com") {
-    target = url.searchParams.get("u");
-  } else if (hostname.endsWith("safelinks.protection.outlook.com")) {
-    target = url.searchParams.get("url");
-  } else if (hostname === "slack-redir.net" && url.pathname === "/link") {
-    target = url.searchParams.get("url");
+  const rule = REDIRECT_RULES.find((candidate) => matchesRedirectRule(url, candidate));
+  if (!rule) {
+    return url;
   }
 
-  if (target && isCleanableUrl(target)) {
-    return new URL(target);
-  }
+  const target = rule.parameters
+    .map((parameter) => url.searchParams.get(parameter))
+    .find((value) => value && isCleanableUrl(value));
 
-  return url;
+  return target ? new URL(target) : url;
 }
 
 function cleanLink(value) {
@@ -187,8 +193,7 @@ function cleanLink(value) {
     }
   }
 
-  const unwrapped = url.href !== originalUrl.href && url.href !== value;
-  if (unwrapped) {
+  if (url.href !== originalUrl.href && url.href !== value) {
     removed.unshift("redirect wrapper");
   }
 

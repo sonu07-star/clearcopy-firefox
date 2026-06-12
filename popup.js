@@ -22,7 +22,7 @@ function showResult() {
   elements.summary.textContent = result.changed
     ? "Ready to copy without the tracking clutter."
     : "Nothing needs to be removed.";
-  elements.cleanUrl.textContent = result.cleanUrl;
+  elements.cleanUrl.value = result.cleanUrl;
   elements.cleanUrl.title = result.cleanUrl;
 
   if (result.changed) {
@@ -44,10 +44,10 @@ function showResult() {
 async function copyCleanLink() {
   try {
     await navigator.clipboard.writeText(result.cleanUrl);
-    elements.copy.querySelector("span").textContent = "Copied!";
+    elements.copy.textContent = "Copied";
     window.setTimeout(() => window.close(), 650);
   } catch {
-    elements.copy.querySelector("span").textContent = "Copy failed - try again";
+    elements.copy.textContent = "Copy failed";
   }
 }
 
@@ -59,7 +59,7 @@ async function initialize() {
     elements.icon.textContent = "-";
     elements.title.textContent = "This page cannot be cleaned";
     elements.summary.textContent = "Open a regular web page and try again.";
-    elements.cleanUrl.textContent = currentTab?.url || "URL unavailable";
+    elements.cleanUrl.value = currentTab?.url || "URL unavailable";
     elements.card.classList.remove("loading");
     return;
   }

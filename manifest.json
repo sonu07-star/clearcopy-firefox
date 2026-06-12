@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ClearCopy - Clean Links",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Remove tracking parameters and copy clean, shareable links in one click.",
   "author": "sonu07-star",
   "homepage_url": "https://github.com/sonu07-star/clearcopy-firefox",
