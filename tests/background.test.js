@@ -7,7 +7,6 @@ const listeners = {};
 const menus = [];
 const badgeTexts = [];
 const clipboardWrites = [];
-const storageWrites = [];
 
 function event(name) {
   return {
@@ -40,16 +39,6 @@ const browser = {
     onInstalled: event("installed"),
     onMessage: event("message"),
     onStartup: event("startup")
-  },
-  storage: {
-    local: {
-      async get() {
-        return {};
-      },
-      async set(details) {
-        storageWrites.push(details);
-      }
-    }
   },
   tabs: {
     async query() {
@@ -98,15 +87,13 @@ async function run() {
 
   await listeners.command("copy-clean-link");
   assert.equal(clipboardWrites.at(-1), "https://example.com/article?id=42");
-  assert.equal(storageWrites.at(-1).linksCleaned, 1);
-  assert.equal(storageWrites.at(-1).trackersRemoved, 1);
   assert.deepEqual(badgeTexts.slice(-2), ["OK", ""]);
 
   const writesBeforeUnknownCommand = clipboardWrites.length;
   await listeners.command("unknown-command");
   assert.equal(clipboardWrites.length, writesBeforeUnknownCommand);
 
-  console.log("Passed 8 background workflow checks.");
+  console.log("Passed 6 background workflow checks.");
 }
 
 run().catch((error) => {

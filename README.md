@@ -15,7 +15,15 @@ processing happens locally in Firefox.
 - Preserves search terms, product selections, timestamps, filters, and other
   useful link behavior.
 
-## Test in Firefox
+## Permissions
+
+- `activeTab`: read the current page URL after you activate ClearCopy.
+- `clipboardWrite`: copy the cleaned link.
+- `contextMenus`: add the optional right-click actions.
+
+ClearCopy does not request access to all websites or browsing history.
+
+## Test locally
 
 1. Open `about:debugging`.
 2. Select **This Firefox**.
@@ -32,12 +40,10 @@ npm run check
 npm run build
 ```
 
-The upload-ready ZIP is created in `web-ext-artifacts`.
+The Firefox upload ZIP is created in `web-ext-artifacts`.
 
 ## Privacy
 
-ClearCopy does not collect or transmit data. Local usage totals are stored only
-on the user's device and can be removed by uninstalling the extension or
-clearing its local extension storage.
+ClearCopy does not collect, transmit, or store browsing or usage data.
 
 Read the full [privacy policy](PRIVACY.md).

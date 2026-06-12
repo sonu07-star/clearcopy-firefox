@@ -18,15 +18,6 @@ async function createMenus() {
 browser.runtime.onInstalled.addListener(() => createMenus().catch(console.error));
 browser.runtime.onStartup.addListener(() => createMenus().catch(console.error));
 
-async function recordClean(removedCount) {
-  const stats = await browser.storage.local.get(["linksCleaned", "trackersRemoved"]);
-  const safeRemovedCount = Number.isInteger(removedCount) ? removedCount : 0;
-  await browser.storage.local.set({
-    linksCleaned: (stats.linksCleaned || 0) + 1,
-    trackersRemoved: (stats.trackersRemoved || 0) + safeRemovedCount
-  });
-}
-
 async function copyUrl(value, tabId) {
   if (!isCleanableUrl(value)) {
     return;
@@ -34,7 +25,6 @@ async function copyUrl(value, tabId) {
 
   const result = cleanLink(value);
   await navigator.clipboard.writeText(result.cleanUrl);
-  await recordClean(result.removed.length);
 
   if (Number.isInteger(tabId)) {
     await browser.action.setBadgeBackgroundColor({ color: "#285d3d", tabId });
@@ -58,11 +48,5 @@ browser.commands.onCommand.addListener(async (command) => {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   if (tabs[0]?.url) {
     await copyUrl(tabs[0].url, tabs[0].id);
-  }
-});
-
-browser.runtime.onMessage.addListener((message) => {
-  if (message?.type === "record-clean") {
-    return recordClean(message.removedCount);
   }
 });

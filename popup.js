@@ -7,7 +7,6 @@ const elements = {
   cleanUrl: document.querySelector("#clean-url"),
   copy: document.querySelector("#copy-button"),
   replace: document.querySelector("#replace-button"),
-  stats: document.querySelector("#stats")
 };
 
 let currentTab;
@@ -42,24 +41,9 @@ function showResult() {
   elements.replace.disabled = !result.changed || !Number.isInteger(currentTab?.id);
 }
 
-async function updateStats() {
-  const { linksCleaned = 0, trackersRemoved = 0 } =
-    await browser.storage.local.get(["linksCleaned", "trackersRemoved"]);
-
-  if (linksCleaned > 0) {
-    elements.stats.textContent =
-      `${trackersRemoved} tracker${trackersRemoved === 1 ? "" : "s"} removed from ` +
-      `${linksCleaned} link${linksCleaned === 1 ? "" : "s"}.`;
-  }
-}
-
 async function copyCleanLink() {
   try {
     await navigator.clipboard.writeText(result.cleanUrl);
-    await browser.runtime.sendMessage({
-      type: "record-clean",
-      removedCount: result.removed.length
-    });
     elements.copy.querySelector("span").textContent = "Copied!";
     window.setTimeout(() => window.close(), 650);
   } catch {
@@ -95,7 +79,7 @@ elements.replace.addEventListener("click", async () => {
   }
 });
 
-Promise.all([initialize(), updateStats()]).catch(() => {
+initialize().catch(() => {
   elements.icon.textContent = "!";
   elements.title.textContent = "ClearCopy could not read this page";
   elements.summary.textContent = "Try again on a regular website.";
