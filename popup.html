@@ -24,6 +24,11 @@
 
         <div id="removed-list" class="removed-list" hidden></div>
 
+        <details id="details-panel" hidden>
+          <summary>Why these were removed</summary>
+          <ul id="removed-details"></ul>
+        </details>
+
         <label for="clean-url">Clean link</label>
         <input id="clean-url" type="text" readonly value="Loading...">
       </section>
@@ -34,6 +39,9 @@
         </button>
         <button id="replace-button" type="button" disabled>
           Replace current address
+        </button>
+        <button id="copy-markdown-button" type="button" disabled>
+          Copy Markdown link
         </button>
       </div>
 

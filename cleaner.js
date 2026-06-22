@@ -7,6 +7,7 @@ const GLOBAL_PARAMETER_RULES = {
     "_hsmi",
     "_openstat",
     "campaign_id",
+    "ck_subscriber_id",
     "dclid",
     "epik",
     "fbclid",
@@ -17,6 +18,14 @@ const GLOBAL_PARAMETER_RULES = {
     "irclickid",
     "irgwc",
     "li_fat_id",
+    "matomo_campaign",
+    "matomo_cid",
+    "matomo_content",
+    "matomo_group",
+    "matomo_keyword",
+    "matomo_medium",
+    "matomo_placement",
+    "matomo_source",
     "mc_cid",
     "mc_eid",
     "mkt_tok",
@@ -25,6 +34,15 @@ const GLOBAL_PARAMETER_RULES = {
     "oly_enc_id",
     "rb_clickid",
     "s_cid",
+    "sc_campaign",
+    "sc_channel",
+    "sc_content",
+    "sc_country",
+    "sc_geo",
+    "sc_medium",
+    "sc_outcome",
+    "sc_publisher",
+    "sc_src",
     "srsltid",
     "ttclid",
     "twclid",
@@ -34,12 +52,22 @@ const GLOBAL_PARAMETER_RULES = {
     "wickedid",
     "yclid"
   ]),
-  prefixes: ["_ga_", "_gac_", "utm_", "pk_", "mtm_", "hsa_", "vero_"],
+  prefixes: ["_ga_", "_gac_", "utm_", "pk_", "mtm_", "hsa_", "vero_", "wt_"],
   patterns: [
     /(^|[_-])(ad|affiliate|click|marketing|partner|promo|referral|tracking|tracker)[_-]?(id|code|token)$/i,
     /(^|[_-])(adid|affid|clickid|trackingid|trackerid)$/i,
     /(^|[_-])[a-z]*clid$/i
   ]
+};
+
+const REMOVAL_REASONS = {
+  automatic: "automatic tracker name",
+  globalExact: "known tracking parameter",
+  globalPattern: "tracking name pattern",
+  globalPrefix: "tracking prefix",
+  redirect: "redirect wrapper",
+  siteExact: "site-specific tracking parameter",
+  sitePattern: "site-specific tracking pattern"
 };
 
 const AMAZON_DOMAINS = new Set([
@@ -128,27 +156,54 @@ function hostMatchesDomains(hostname, domains) {
   return [...domains].some((domain) => hostMatchesDomain(hostname, domain));
 }
 
-function matchesParameterRules(name, rules) {
-  return (
-    rules.exact?.has(name) ||
-    rules.parameters?.has(name) ||
-    rules.prefixes?.some((prefix) => name.startsWith(prefix)) ||
-    rules.patterns?.some((pattern) => pattern.test(name))
-  );
+function getParameterMatch(name, rules, source) {
+  if (rules.exact?.has(name)) {
+    return { source, reason: REMOVAL_REASONS.globalExact };
+  }
+
+  if (rules.parameters?.has(name)) {
+    return { source, reason: REMOVAL_REASONS.siteExact };
+  }
+
+  if (rules.prefixes?.some((prefix) => name.startsWith(prefix))) {
+    return { source, reason: REMOVAL_REASONS.globalPrefix };
+  }
+
+  if (rules.patterns?.some((pattern) => pattern.test(name))) {
+    return {
+      source,
+      reason: source === "automatic" ? REMOVAL_REASONS.automatic : REMOVAL_REASONS.sitePattern
+    };
+  }
+
+  return null;
 }
 
 function getSiteRules(hostname) {
   return SITE_PARAMETER_RULES.filter((rule) => hostMatchesDomains(hostname, rule.domains));
 }
 
-function isTrackingParameter(name, hostname) {
+function getTrackingParameterMatch(name, hostname) {
   const normalizedName = name.toLowerCase();
   const normalizedHost = normalizeHostname(hostname);
+  const globalMatch = getParameterMatch(normalizedName, GLOBAL_PARAMETER_RULES, "global");
 
-  return (
-    matchesParameterRules(normalizedName, GLOBAL_PARAMETER_RULES) ||
-    getSiteRules(normalizedHost).some((rule) => matchesParameterRules(normalizedName, rule))
-  );
+  if (globalMatch) {
+    return globalMatch;
+  }
+
+  for (const rule of getSiteRules(normalizedHost)) {
+    const siteMatch = getParameterMatch(normalizedName, rule, normalizedHost);
+    if (siteMatch) {
+      return siteMatch;
+    }
+  }
+
+  return null;
+}
+
+function isTrackingParameter(name, hostname) {
+  return Boolean(getTrackingParameterMatch(name, hostname));
 }
 
 function isCleanableUrl(value) {
@@ -171,36 +226,56 @@ function matchesRedirectRule(url, rule) {
 function unwrapKnownRedirect(url) {
   const rule = REDIRECT_RULES.find((candidate) => matchesRedirectRule(url, candidate));
   if (!rule) {
-    return url;
+    return { url, unwrapped: false };
   }
 
   const target = rule.parameters
     .map((parameter) => url.searchParams.get(parameter))
     .find((value) => value && isCleanableUrl(value));
 
-  return target ? new URL(target) : url;
+  return target
+    ? { url: new URL(target), unwrapped: true }
+    : { url, unwrapped: false };
 }
 
 function cleanLink(value) {
   const originalUrl = new URL(value);
-  const url = unwrapKnownRedirect(originalUrl);
-  const removed = [];
+  const redirectResult = unwrapKnownRedirect(originalUrl);
+  const url = redirectResult.url;
+  const removedItems = [];
 
   for (const name of [...url.searchParams.keys()]) {
-    if (isTrackingParameter(name, url.hostname)) {
+    const match = getTrackingParameterMatch(name, url.hostname);
+    if (match) {
       url.searchParams.delete(name);
-      removed.push(name);
+      removedItems.push({
+        name,
+        reason: match.reason,
+        source: match.source,
+        type: "parameter"
+      });
     }
   }
 
-  if (url.href !== originalUrl.href && url.href !== value) {
-    removed.unshift("redirect wrapper");
+  if (redirectResult.unwrapped && url.href !== value) {
+    removedItems.unshift({
+      name: "redirect wrapper",
+      reason: REMOVAL_REASONS.redirect,
+      source: normalizeHostname(originalUrl.hostname),
+      type: "redirect"
+    });
   }
+
+  const uniqueRemovedItems = removedItems.filter(
+    (item, index, items) => items.findIndex((candidate) => candidate.name === item.name) === index
+  );
 
   return {
     originalUrl: value,
     cleanUrl: url.href,
     changed: url.href !== value,
-    removed: [...new Set(removed)]
+    removed: uniqueRemovedItems.map((item) => item.name),
+    removedItems: uniqueRemovedItems,
+    removedCount: uniqueRemovedItems.length
   };
 }

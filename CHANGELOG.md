@@ -2,6 +2,16 @@
 
 All notable changes to ClearCopy are documented here.
 
+## 1.1.0 - 2026-06-22
+
+1. Added removal explanations for each cleaned field.
+2. Added Markdown link copying from the popup and context menus.
+3. Added a before/after size summary in the popup.
+4. Expanded high-confidence Matomo, Sitecore, CleverReach, and Webtrends
+   tracking rules.
+5. Added regression coverage for removal metadata and Markdown workflows.
+6. Kept permissions unchanged from 1.0.2.
+
 ## 1.0.2 - 2026-06-12
 
 1. Refactored URL cleaning into documented global, site-specific, automatic, and

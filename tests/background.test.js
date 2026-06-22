@@ -45,6 +45,7 @@ const browser = {
       return [
         {
           id: 7,
+          title: "Example [Article]",
           url: "https://example.com/article?id=42&utm_source=email"
         }
       ];
@@ -79,21 +80,33 @@ vm.runInContext(
 
 async function run() {
   await listeners.installed();
-  assert.equal(menus.length, 2, "installation creates both context menus");
+  assert.equal(menus.length, 4, "installation creates context menus");
 
   menus.length = 0;
   await listeners.startup();
-  assert.equal(menus.length, 2, "browser startup recreates both context menus");
+  assert.equal(menus.length, 4, "browser startup recreates context menus");
 
   await listeners.command("copy-clean-link");
   assert.equal(clipboardWrites.at(-1), "https://example.com/article?id=42");
   assert.deepEqual(badgeTexts.slice(-2), ["OK", ""]);
 
+  await listeners.menuClicked(
+    {
+      menuItemId: "clearcopy-page-markdown",
+      pageUrl: "https://example.com/article?id=42&utm_source=email"
+    },
+    { id: 7, title: "Example [Article]" }
+  );
+  assert.equal(
+    clipboardWrites.at(-1),
+    "[Example \\[Article\\]](https://example.com/article?id=42)"
+  );
+
   const writesBeforeUnknownCommand = clipboardWrites.length;
   await listeners.command("unknown-command");
   assert.equal(clipboardWrites.length, writesBeforeUnknownCommand);
 
-  console.log("Passed 6 background workflow checks.");
+  console.log("Passed 8 background workflow checks.");
 }
 
 run().catch((error) => {

@@ -8,6 +8,7 @@ vm.createContext(context);
 vm.runInContext(
   `${fs.readFileSync(path.join(__dirname, "..", "cleaner.js"), "utf8")}
   this.cleanLink = cleanLink;
+  this.isTrackingParameter = isTrackingParameter;
   this.isCleanableUrl = isCleanableUrl;`,
   context
 );
@@ -162,6 +163,12 @@ const cases = [
     expected: "https://example.com/page?article=1"
   },
   {
+    name: "removes Matomo and Sitecore campaign parameters",
+    input:
+      "https://example.com/page?id=1&matomo_campaign=sale&sc_campaign=launch&wt_mc=email",
+    expected: "https://example.com/page?id=1"
+  },
+  {
     name: "preserves duplicate useful parameters",
     input: "https://example.com/?filter=red&filter=blue&utm_campaign=sale",
     expected: "https://example.com/?filter=red&filter=blue"
@@ -178,4 +185,17 @@ assert.equal(context.isCleanableUrl("about:debugging"), false);
 assert.equal(context.isCleanableUrl("javascript:alert(1)"), false);
 assert.equal(context.isCleanableUrl("not a URL"), false);
 
-console.log(`Passed ${cases.length + 5} cleaner checks.`);
+const metadataResult = context.cleanLink(
+  "https://www.google.com/url?q=https%3A%2F%2Fexample.com%2Fpost%3Futm_source%3Dsocial%26id%3D7"
+);
+assert.equal(metadataResult.removedCount, 2);
+assert.deepEqual(Array.from(metadataResult.removed), ["redirect wrapper", "utm_source"]);
+assert.equal(metadataResult.removedItems[0].type, "redirect");
+assert.equal(metadataResult.removedItems[1].reason, "tracking prefix");
+
+assert.equal(context.isTrackingParameter("click_id", "example.com"), true);
+assert.equal(context.isTrackingParameter("session_id", "example.com"), false);
+assert.equal(context.isTrackingParameter("si", "youtube.com"), true);
+assert.equal(context.isTrackingParameter("si", "example.com"), false);
+
+console.log(`Passed ${cases.length + 13} cleaner checks.`);

@@ -12,10 +12,12 @@
 
 - Clean and copy the current page from the toolbar popup.
 - Right-click a page or link and choose **Copy clean link**.
+- Copy clean Markdown links for notes, docs, and GitHub issues.
 - Press `Alt+Shift+C` to clean and copy the current page.
 - Remove common marketing, affiliate, click-tracking, and social parameters.
 - Unwrap known redirect links from Google, Facebook, Instagram, Outlook, and Slack.
 - Preserve useful search terms, product selections, filters, timestamps, and pagination.
+- See why each tracking field was removed.
 - Process every link locally without analytics, accounts, remote code, or data collection.
 
 ## Example
@@ -51,6 +53,7 @@ ClearCopy uses readable local rule sets:
 - **Site-specific rules** for parameters that are tracking only on particular sites.
 - **Conservative automatic rules** for unambiguous names such as `click_id`.
 - **Redirect rules** for known wrappers such as Outlook Safe Links.
+- **Removal explanations** shown in the popup for transparent review.
 
 Unknown or ambiguous parameters are preserved to avoid breaking links. See
 [RULES.md](RULES.md) for details.

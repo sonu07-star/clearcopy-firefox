@@ -21,6 +21,9 @@ Established families of tracking parameters:
 utm_*, _ga_*, _gac_*, hsa_*, mtm_*, pk_*, vero_*
 ```
 
+Additional high-confidence campaign systems such as Matomo, Sitecore, and
+Webtrends are covered by exact names or prefixes.
+
 ### Conservative automatic names
 
 Names that clearly identify tracking metadata, such as:

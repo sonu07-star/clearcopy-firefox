@@ -1,6 +1,6 @@
 {
   "name": "clearcopy-firefox",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "private": true,
   "description": "Development and release checks for ClearCopy.",
   "scripts": {
